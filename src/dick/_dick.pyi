@@ -1,7 +1,7 @@
 from customtkinter import CTkImage
 from PIL.Image import Image
 
-def HextoRgb(HEX: str) -> tuple[int, int, int]:
+def HextoRgb(HEX: str) -> tuple[int, int, int] | bool:
     """Переобразует HEX кадировку в RGB.
 
     Args:
