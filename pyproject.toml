@@ -1,14 +1,14 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.13"]
+build-backend = "scikit_build_core.build"
+
 [project]
 name = "dick"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "C++ extension for Python"
 requires-python = ">=3.13"
 dependencies = []
 
-[project.scripts]
-dick = "dick:main"
-
-[build-system]
-requires = ["uv_build>=0.13.5,<0.14.0"]
-build-backend = "uv_build"
+[tool.scikit-build]
+# Вот здесь было изменение
+cmake.version = ">=3.15"
