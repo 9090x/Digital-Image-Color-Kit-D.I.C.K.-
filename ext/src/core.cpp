@@ -1,34 +1,36 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <string>
 #include <stdexcept>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <tuple>
+
+
+using namespace std;
 namespace py = pybind11;
 
-// 1. Простая математика
-int add(int a, int b) {
-    return a + b;
+//-----------------------------------------------------------------------------------------
+pair<int, int> extractor(string PATH){
+    int width, height, channels;
+    unsigned char* img_data = stbi_load(PATH.c_str(), &width, &height, &channels, 0);
+    stbi_image_free(img_data);
+    return make_pair(width, height);
 }
 
-// 2. Работа со строками
-std::string greet(const std::string& name) {
-    return "Hello, " + name + " from C++!";
-}
 
-// 3. Проверка исключений (std::invalid_argument -> ValueError в Python)
-double divide(double a, double b) {
-    if (b == 0.0) {
-        throw std::invalid_argument("Division by zero is not allowed");
-    }
-    return a / b;
-}
-
+//-----------------------------------------------------------------------------------------
 // Макрос регистрации модуля. Имя должно совпадать с тем, что в CMakeLists.txt
-PYBIND11_MODULE(dick, m) {
+PYBIND11_MODULE(_dick_cpp, m) {
     m.doc() = "C++ extension for dick library";
     
     // py::arg делает аргументы именованными в Python (хорошая практика)
-    m.def("add", &add, "Add two integers", py::arg("a"), py::arg("b"));
-    m.def("greet", &greet, "Greet someone", py::arg("name"));
-    m.def("divide", &divide, "Divide two numbers", py::arg("a"), py::arg("b"));
+    //m.def("add", &add, "Add two integers", py::arg("a"), py::arg("b"));
+    m.def("extractor", &extractor, "TEST", py::arg("PATH"));
 }

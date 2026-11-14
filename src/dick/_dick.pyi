@@ -1,6 +1,17 @@
 from customtkinter import CTkImage
 from PIL.Image import Image
 
+def HextoRgb(HEX: str) -> tuple[int, int, int] | None:
+    """Переобразует HEX кадировку в RGB.
+
+    Args:
+        HEX (str): HEX строка - от 0(000000), до 16777215(FFFFFF). БЕЗ ПРИСТАВКИ `0x`!
+
+    Returns:
+        tuple[int, int, int]: Кортеж с RGB цветами
+    """
+    ...
+
 def extractor(PATH: str) -> tuple[tuple[str], tuple[str]]:
     """Экстрактор цветовой палитры из фото
 

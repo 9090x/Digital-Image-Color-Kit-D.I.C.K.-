@@ -1,2 +1,2 @@
-import _dick
+import dick_cpp
 
