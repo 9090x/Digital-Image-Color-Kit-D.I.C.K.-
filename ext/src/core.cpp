@@ -7,6 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include <cmath>
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
@@ -138,20 +139,78 @@ pair<vector<string>, vector<string>> extractor(const string& PATH){
     sort(pixels.begin(), pixels.end());
     pixels.erase(unique(pixels.begin(), pixels.end()), pixels.end());
 
-
     return VectorsColorOfString(generatePalette16(pixels));
 }
 
+//-----------------------------------------------------------------------------------------converter-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------MAIN_FUNC
+string converter(const string& PATH, const string& palette, const double aim, const int width, const int height){
+    //-----------------------------------------------------------------------------------------image
+    int img_width, img_height, channels;
+    auto img_data = std::unique_ptr<unsigned char[], void(*)(unsigned char*)>(
+        stbi_load(PATH.c_str(), &img_width, &img_height, &channels, 0), 
+        [](unsigned char* p) { stbi_image_free(p); }
+    );
+
+    //-----------------------------------------------------------------------------------------validation
+    if (!img_data){
+        throw ImageNotFoundError("Image `" + PATH + "`not exist!");
+    }
+    if (width < 1 || width > img_width || height < 1 ||  height > img_height) throw py::value_error("`width`{" + to_string(width) + "} and `height`{" + to_string(height) + "} must be bigger than `0` and smaller than image's size");
+    if (aim < 0.0 || aim > 1.0) throw py::value_error("`aim`{" + to_string(aim) + "} must be from `0` to `1`");
+
+    //-----------------------------------------------------------------------------------------MAIN
+    const double K {(255.0 * aim)/(palette.length()-1)};
+    const int chunk_width{img_width / width}, chunk_height{img_height / height}, chunk_size{chunk_width * chunk_height};
+    string output {""};
+    output.reserve(height * (width + 1));
+
+    cout << "img_width: " << img_width << "| img_height: " << img_height << "| channels: " << channels << endl;
+    cout << "-------------------------------------" << endl << "K: " << K << endl;
+    cout << "chunk_width: " << chunk_width << "| chunk_height: " << chunk_height << "| chunk_size: " << chunk_size << endl;
+    //-----------------------------------------------------------------------------------------core_itteration
+    for (int global_y{0}; global_y < height; ++global_y){
+        for (int global_x{0}; global_x < width; ++global_x){
+            uint64_t R{0}, G{0}, B{0}, A{0};
+
+            const int actual_y{global_y*chunk_height}, actual_x{global_x*chunk_width};
+
+            //-----------------------------------------------------------------------------------------sub_core_itteration
+            for (int sub_y{actual_y}; sub_y < actual_y+chunk_height; ++sub_y){
+                for (int sub_x{actual_x}; sub_x < actual_x+chunk_width; ++sub_x){
+                    const int index = (sub_y * img_width + sub_x) * channels;
+                    R += img_data[index];
+                    G += img_data[index+1];
+                    B += img_data[index+2];
+                    if (channels == 4) A += img_data[index+3];
+                }
+            }
+
+            //-----------------------------------------------------------------------------------------math
+            const int index_chr = static_cast<int>(
+                ((0.2126*(static_cast<double>(R)/chunk_size) + 
+                0.7152*(static_cast<double>(G)/chunk_size) +
+                0.0722*(static_cast<double>(B)/chunk_size)) *
+                ((channels != 4) ? 1.0:(static_cast<double>(A)/chunk_size/255))) /
+                K
+            );
+            output += palette[(index_chr >= palette.length()) ? (palette.length()-1) : index_chr];
+        }
+        output += "\n";
+    }
+    
+    return output;
+}
 
 //-----------------------------------------------------------------------------------------
-// Макрос регистрации модуля. Имя должно совпадать с тем, что в CMakeLists.txt
+// Макрос регистрации модуля.
 PYBIND11_MODULE(_dick_cpp, m) {
     m.doc() = "C++ extension for dick library";
     
     //errors
     py::register_exception<ImageNotFoundError>(m, "ImageNotFoundError", PyExc_FileNotFoundError);
 
-    // py::arg делает аргументы именованными в Python (хорошая практика)
     //m.def("add", &add, "Add two integers", py::arg("a"), py::arg("b"));
-    m.def("extractor", &extractor, "TEST", py::arg("PATH"));
+    m.def("extractor", &extractor, "Извлекает цветовую палитру из изображения по заданному пути. Функция загружает изображение, извлекает все уникальные цвета, сортирует их и формирует палитру из 16 цветов, равномерно распределенных по отсортированному набору. Возвращает два списка со строковыми представлениями этих цветов в форматах HEX и RGB.", py::arg("PATH"));
+    m.def("converter", &converter, "...", py::arg("PATH"), py::arg("palette"), py::arg("aim"), py::arg("width"), py::arg("height"));
 }

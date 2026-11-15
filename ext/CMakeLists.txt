@@ -22,3 +22,13 @@ install(TARGETS _dick_cpp
     LIBRARY DESTINATION _dick_cpp
     RUNTIME DESTINATION _dick_cpp
 )
+
+# Для MSVC
+if(MSVC)
+    add_compile_options(/utf-8)  # И source, и execution charset = UTF-8
+endif()
+
+# Для GCC/Clang (обычно не нужно, но на всякий случай)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
+endif()

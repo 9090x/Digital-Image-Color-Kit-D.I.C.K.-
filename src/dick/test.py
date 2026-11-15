@@ -1,2 +1,7 @@
-from _dick_cpp import _dick_cpp
-print((test :=_dick_cpp.extractor("E:\\image\\random meme\\Regenerating_Scrap.png"))[0], test[1])
+import dick_wrapper
+
+with open("test.txt", "w", encoding="utf-8") as file : file.write(dick_wrapper.converter("E:\\image\\Photo\\986875.jpg",
+                                                                                    " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
+                                                                                    960,
+                                                                                    480
+                                                                                    ))
