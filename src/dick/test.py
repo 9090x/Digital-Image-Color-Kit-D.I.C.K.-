@@ -1,7 +1,7 @@
 import dick_wrapper
-
-with open("test.txt", "w", encoding="utf-8") as file : file.write(dick_wrapper.converter("E:\\image\\Photo\\986875.jpg",
-                                                                                    " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
-                                                                                    960,
-                                                                                    480
-                                                                                    ))
+import customtkinter as CTk
+wind = CTk.CTk()
+colors, CTkimage, image = dick_wrapper.generator((33, 228, 87), (202, 123, 213, 0.0), 500, 300)
+print(colors[0])
+CTk.CTkLabel(wind, image=CTkimage, text="").pack(pady=30)
+wind.mainloop()

@@ -27,12 +27,21 @@ public:
 
 //-----------------------------------------------------------------------------------------STRUCTS
 struct Color{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;
+    uint8_t r{};
+    uint8_t g{};
+    uint8_t b{};
+    uint8_t a{};
 
-    Color() = default;
+
+    string toBytes() const {
+        string result;
+        result.reserve(4);
+        result.push_back(static_cast<unsigned char>(r));
+        result.push_back(static_cast<unsigned char>(g));
+        result.push_back(static_cast<unsigned char>(b));
+        result.push_back(static_cast<unsigned char>(a));
+        return result;
+    }
 
     string HexCode() const {
         const char hex[] = "0123456789ABCDEF";
@@ -165,9 +174,6 @@ string converter(const string& PATH, const string& palette, const double aim, co
     string output {""};
     output.reserve(height * (width + 1));
 
-    cout << "img_width: " << img_width << "| img_height: " << img_height << "| channels: " << channels << endl;
-    cout << "-------------------------------------" << endl << "K: " << K << endl;
-    cout << "chunk_width: " << chunk_width << "| chunk_height: " << chunk_height << "| chunk_size: " << chunk_size << endl;
     //-----------------------------------------------------------------------------------------core_itteration
     for (int global_y{0}; global_y < height; ++global_y){
         for (int global_x{0}; global_x < width; ++global_x){
@@ -194,12 +200,42 @@ string converter(const string& PATH, const string& palette, const double aim, co
                 ((channels != 4) ? 1.0:(static_cast<double>(A)/chunk_size/255))) /
                 K
             );
-            output += palette[(index_chr >= palette.length()) ? (palette.length()-1) : index_chr];
+            output.push_back(palette[(index_chr >= palette.length()) ? (palette.length()-1) : index_chr]);
         }
         output += "\n";
     }
     
     return output;
+}
+
+//-----------------------------------------------------------------------------------------generator-----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------MAIN_FUNC
+
+pair<pair<vector<string>, vector<string>>, py::bytes> generator(const tuple<uint8_t, uint8_t, uint8_t, uint8_t> FirstColor, const tuple<uint8_t, uint8_t, uint8_t, uint8_t> SecondColor, const int width, const int height){
+    //-----------------------------------------------------------------------------------------validation
+    if (width < 2)  throw py::value_error("`width`{" + to_string(width) + "} must be bigger than `2` or equal");
+    if (height < 2)  throw py::value_error("`height`{" + to_string(height) + "} must be bigger than `1` or equal");
+
+    //-----------------------------------------------------------------------------------------MAIN
+    const double kR {static_cast<double>(static_cast<int16_t>(get<0>(SecondColor)) - static_cast<int16_t>(get<0>(FirstColor)))/static_cast<double>(width)},
+                kG {static_cast<double>(static_cast<int16_t>(get<1>(SecondColor)) - static_cast<int16_t>(get<1>(FirstColor)))/static_cast<double>(width)},
+                kB {static_cast<double>(static_cast<int16_t>(get<2>(SecondColor)) - static_cast<int16_t>(get<2>(FirstColor)))/static_cast<double>(width)},
+                kA {static_cast<double>(static_cast<int16_t>(get<3>(SecondColor)) - static_cast<int16_t>(get<3>(FirstColor)))/static_cast<double>(width)};
+    vector<Color> cache;
+    string output_str {};
+    output_str.reserve(width*4);
+    cache.reserve(width);
+    
+    //-----------------------------------------------------------------------------------------fill
+    for (int x{0}; x < width-1; ++x){
+        cache.push_back(Color{static_cast<uint8_t>(get<0>(FirstColor)+static_cast<int>(kR*x)), static_cast<uint8_t>(get<1>(FirstColor)+static_cast<int>(kG*x)), static_cast<uint8_t>(get<2>(FirstColor)+static_cast<int>(kB*x)), static_cast<uint8_t>(get<3>(FirstColor)+static_cast<int>(kA*x))});
+        output_str += cache[x].toBytes();
+    }
+    cache.push_back(Color{get<0>(SecondColor), get<1>(SecondColor), get<2>(SecondColor), get<3>(SecondColor)});
+    output_str += cache[width-1].toBytes();
+    
+    
+    return make_pair(VectorsColorOfString(cache), py::bytes(output_str));
 }
 
 //-----------------------------------------------------------------------------------------
@@ -211,6 +247,7 @@ PYBIND11_MODULE(_dick_cpp, m) {
     py::register_exception<ImageNotFoundError>(m, "ImageNotFoundError", PyExc_FileNotFoundError);
 
     //m.def("add", &add, "Add two integers", py::arg("a"), py::arg("b"));
-    m.def("extractor", &extractor, "Извлекает цветовую палитру из изображения по заданному пути. Функция загружает изображение, извлекает все уникальные цвета, сортирует их и формирует палитру из 16 цветов, равномерно распределенных по отсортированному набору. Возвращает два списка со строковыми представлениями этих цветов в форматах HEX и RGB.", py::arg("PATH"));
+    m.def("extractor", &extractor, "...", py::arg("PATH"));
     m.def("converter", &converter, "...", py::arg("PATH"), py::arg("palette"), py::arg("aim"), py::arg("width"), py::arg("height"));
+    m.def("generator", &generator, "...", py::arg("FirstColor"), py::arg("SecondColor"), py::arg("width"), py::arg("height"));
 }
