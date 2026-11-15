@@ -1,28 +1,34 @@
-include(FetchContent)
+# Локальные заголовки stb
+add_library(stb_headers INTERFACE)
+target_include_directories(stb_headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
 
-# Тянем pybind11 с GitHub (стабильная ветка)
-FetchContent_Declare(
-    pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG        v2.13.6
-)
-FetchContent_MakeAvailable(pybind11)
+# Собираем все .cpp из src/
+file(GLOB_RECURSE MODULE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
-# Собираем модуль из всех .cpp в src/
-file(GLOB_RECURSE DICK_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+# Создаем Python-модуль
+pybind11_add_module(_dick_cpp ${MODULE_SOURCES})
 
-pybind11_add_module(_dick_cpp ${DICK_SOURCES})
+# Привязываем stb
+target_link_libraries(_dick_cpp PRIVATE stb_headers)
 
-# Имя выходного файла (без lib-префикса на Linux)
+# Убираем префикс "lib"
 set_target_properties(_dick_cpp PROPERTIES
     PREFIX ""
     OUTPUT_NAME "_dick_cpp"
 )
 
-target_link_libraries(_dick_cpp PRIVATE some_lib)
-
-# Устанавливаем .so/.pyd прямо в пакет dick/
+# Установка для scikit-build-core
 install(TARGETS _dick_cpp
-    LIBRARY DESTINATION dick
-    RUNTIME DESTINATION dick
+    LIBRARY DESTINATION _dick_cpp
+    RUNTIME DESTINATION _dick_cpp
 )
+
+# Для MSVC
+if(MSVC)
+    add_compile_options(/utf-8)  # И source, и execution charset = UTF-8
+endif()
+
+# Для GCC/Clang (обычно не нужно, но на всякий случай)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
+endif()

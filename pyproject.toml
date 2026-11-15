@@ -15,3 +15,4 @@ dependencies = [
 [tool.scikit-build]
 # Вот здесь было изменение
 cmake.version = ">=3.15"
+wheel.packages = ["src"]
