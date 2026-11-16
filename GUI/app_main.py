@@ -6,7 +6,7 @@ from .pages.Color_Palette_Extractor import PalettePage
 from .pages.convwrted import AsciiPage
 from .pages.gradient_page import GradientPage
 from tkinterdnd2 import TkinterDnD
-from GUI.backend import zaglushka as _dick 
+from _dick_cpp import dick_wrapper as _dick
 
 
 class DnDWindow(ctk.CTk, TkinterDnD.DnDWrapper):

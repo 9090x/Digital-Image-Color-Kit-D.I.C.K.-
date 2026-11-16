@@ -48,7 +48,7 @@ class GradientPage(BasePage):
         self.result.pack_propagate(False)
 
         ctk.CTkLabel(
-            self.result, text="Здесь появится градиент",
+            self.result, text= "Здесь появится градиент",
             font=theme.FONT_BODY, text_color=theme.TEXT_MUTED,
         ).pack(expand=True)
 
@@ -96,5 +96,19 @@ class GradientPage(BasePage):
         self.hex_labels[key].configure(text=self.colors[key]) #надпись нового кода цвета
 
     def on_make(self):
-        first = self.colors["first"]
-        last = self.colors["last"]
+        def HexToRgb(HEX: str) -> tuple[int, int, int]:
+            HEX = HEX.replace("#", "")
+            return int(HEX[:2:], 16), int(HEX[2:4:], 16), int(HEX[4:6:], 16)
+
+        first = HexToRgb(self.colors["first"])
+        last = HexToRgb(self.colors["last"])
+
+        image = self.backend.make_gradient(first, last, self.result.winfo_width(), self.result.winfo_height())[1]
+
+        ctk_image = ctk.CTkImage(image, image, (self.result.winfo_width(), self.result.winfo_height()))
+
+        for widget in self.result.winfo_children():
+            widget.destroy()
+        label = ctk.CTkLabel(self.result, image=ctk_image, text="")
+        label.pack(expand=True, fill="both")
+        self.__output_ctk_image = ctk_image

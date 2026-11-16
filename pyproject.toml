@@ -8,8 +8,14 @@ version = "0.1.0"
 description = "C++ extension for Python"
 requires-python = ">=3.13"
 dependencies = [
+    "ctkcolorpicker>=0.9.0",
     "customtkinter>=6.0.0",
+    "darkdetect>=0.8.0",
+    "packaging>=26.3",
     "pillow>=13.0.0",
+    "tkinterdnd2>=0.7.0",
+    "tklive>=0.2.0",
+    "watchdog>=7.1.0",
 ]
 
 [tool.scikit-build]
